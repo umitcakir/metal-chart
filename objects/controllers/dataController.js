@@ -21,38 +21,105 @@ module.exports = {
     },
 
     getTime: function (req, res) {
-        var milli = new Date().getTime();
+        Date.prototype.getUnixTime = function() { return this.getTime()/1000|0 };
+        if(!Date.now) Date.now = function() { return new Date(); }
+        Date.time = function() { return Date.now().getUnixTime(); }
+
+
+         var milli = new Date().getTime();
+        //var milli = new Date().UTC.getUnixTime();
+        console.log(milli);
         var timeWithoutMilli = Math.floor(milli / 1000);
         res.status(200).send(timeWithoutMilli.toString());
     },
 
     getSymbols: function (req, res) {
-        console.log(req.query.symbol);
+        var symbol = req.query.symbol;
 
-        var dummy = {
-            "name": "CU3M",
-            "exchange-traded": "LME",
-            "exchange-listed": "LME",
-            "timezone": "Europe/London",
-            "minmov": 0.01,
-            "minmov2": 0.1,
-            "pointvalue": 0.1,
-            "session": "0001-2359",
-            "has_intraday": true,
-            "has_no_volume": true,
-            "description": "LME Copper 3M",
-            "type": "commodity",
-            "supported_resolutions": ["D", "W", "M", "1m", "5m", "15m", "30m", "60m"],
-            "pricescale": 1,
-            "ticker": "CU3M"
-        };
+        if (symbol.indexOf(':') >= 0)
+            symbol = symbol.substr(symbol.indexOf(':') + 1, symbol.length)
 
-        res.json(dummy);
+        for (let obj of config.definitions) {
+            if (obj.name == symbol) {
+                res.json(obj);
+                break;
+            }
+        }
+    },
+    getSearch: function (req, res) {
+        var query = req.query.query.trim().toLowerCase();
+        var limit = req.query.limit;
+        var type = req.query.type;
+        var exchange = req.query.exchange;
+
+        var result = [];
+
+        for (let obj of config.symbols) {
+            if (result.length >= parseInt(limit))
+                continue;
+
+            if (
+                obj.symbol.toLowerCase().includes(query) ||
+                obj.full_name.toLowerCase().includes(query) ||
+                obj.description.toLowerCase().includes(query)
+            ) {
+                result.push(obj);
+            }
+        }
+
+        res.json(result);
     },
     getHistory: function (req, res) {
-        // let query = "select symbol,concat(t3.tim,':00') as 'time',t3.open,t3.high,t3.low,t3.val as 'close', t3.vol from (select * from (select sym as 'symbol', max(uid) as 'ind', date_format(date_sub(tm,INTERVAL (MINUTE(tm) % 1) MINUTE), '%Y-%m-%d %H:%i') as tim, val as 'open', MAX(val) AS high, MIN(val) AS low, sum(size) as 'vol' from tick where sym like '"+req.query.symbol+"' and uid between "+req.query.from+" and "+req.query.to+" group by tim order by ind desc, tm desc) as tLeft left join tick as tRight on tLeft.ind=tRight.uid and tleft.symbol=tright.sym) as t3 ";
-        // let query = "select symbol,concat(t3.tim,':00') as 'time',t3.open,t3.high,t3.low,t3.val as 'close', t3.vol from (select * from (select sym as 'symbol', max(uid) as 'ind', date_format(date_sub(tm,INTERVAL (MINUTE(tm) % 5) MINUTE), '%Y-%m-%d %H:%i') as tim, val as 'open', MAX(val) AS high, MIN(val) AS low, sum(size) as 'vol' from tick where sym like '"+req.query.symbol+"' and uid between "+req.query.from+" and "+req.query.to+" group by tim order by ind desc, tm desc) as tLeft left join (select * from tick where sym like '"+req.query.symbol+"' order by uid desc limit 200) as tRight on tLeft.ind=tRight.uid and tleft.symbol=tright.sym) as t3 ";
-        let query = "select symbol,concat(t3.tim,':00') as 'time',t3.open,t3.high,t3.low,t3.val as 'close', t3.vol from (select * from (select sym as 'symbol', max(uid) as 'ind', date_format(date_sub(tm,INTERVAL (MINUTE(tm) % 5) MINUTE), '%Y-%m-%d %H:%i') as tim, val as 'open', MAX(val) AS high, MIN(val) AS low, sum(size) as 'vol' from tick where sym like '"+req.query.symbol+"' and uid between "+req.query.from+" and "+req.query.to+" group by tim order by ind desc, tm desc limit 200) as tLeft left join (select * from tick where sym like '"+req.query.symbol+"' order by uid desc) as tRight on tLeft.ind=tRight.uid and tleft.symbol=tright.sym) as t3";
+        var symbol = req.query.symbol;
+        var from = req.query.from;
+
+        if(from.length<=10)
+        {
+            from  = parseInt(from) * 1000;
+        }
+
+        var to = req.query.to;
+
+        if(to.length<=10)
+        {
+            to  = parseInt(to)* 1000;
+        }
+
+        var resolution = req.query.resolution;
+
+        var resulotion_edit = 1;
+
+        if (resolution == 'D') {
+            resulotion_edit = 1;
+        }
+        else if (resolution == '1D') {
+
+        }
+        else if (resolution == '1') {
+            resulotion_edit = 1;
+        }
+        else if (resolution == '5') {
+
+        }
+        else if (resolution == '15') {
+
+        }
+        else if (resolution == '30') {
+
+        }
+        else if (resolution == '60') {
+
+        }
+
+        //console.log(resolution);
+        let query = "select symbol,UNIX_TIMESTAMP(concat(t3.tim,':00'))  as 'time',t3.uid,t3.open,t3.high,t3.low,t3.val as 'close', t3.vol from " +
+            "(select * from (select sym as 'symbol', max(uid) as 'ind', date_format(date_sub(tm,INTERVAL (MINUTE(tm) % "+resolution+") MINUTE), '%Y-%m-%d %H:%i') " +
+            "as tim, val as 'open', MAX(val) AS high, MIN(val) AS low, sum(size) as 'vol' from tick where sym like '"+symbol+"' AND uid between "+from+" and "+to+"" +
+            " group by tim order by ind desc, tm desc) as tLeft left join (select * from (select * from tick where sym like '"+symbol+"' order by uid desc)" +
+            " as t4 group by tm) as tRight on tLeft.ind=tRight.uid and tleft.symbol=tright.sym) as t3 ";
+
+        console.log(query);
+
         let time = [];
         let open = [];
         let close = [];
@@ -60,18 +127,34 @@ module.exports = {
         let low = [];
         let volume = [];
 
-        con.query(query, function (err, result)
-        {
+        con.query(query, function (err, result) {
             if (err) {
-                messages.printConsoleMessage(m.FgRed,"Database Error ! " + err);
+                messages.printConsoleMessage(m.FgRed, "Database Error ! " + err);
             }
             else {
-                open = utils.getValueAsArrayFromJson(result,"open",false,true);
-                time = utils.getValueAsArrayFromJson(result,"time",true,false);
-                high = utils.getValueAsArrayFromJson(result,"high",false,true);
-                low = utils.getValueAsArrayFromJson(result,"low",false,true);
-                close = utils.getValueAsArrayFromJson(result,"close",false,true);
-                volume = utils.getValueAsArrayFromJson(result,"vol",false,false);
+                open = utils.getValueAsArrayFromJson(result, "open", false, true).reverse();
+                time = utils.getValueAsArrayFromJson(result, "time", false, false).reverse();
+
+                var tmptimeplus3hour = [];
+
+                for (let obj of time) {
+                    tmptimeplus3hour.push(obj + 10800);
+                }
+                time = tmptimeplus3hour;
+
+                // var tmptime = [];
+                // for (let obj of time) {
+                //     //console.log(parseInt(obj)/1000);
+                //     tmptime.push(Math.trunc(parseInt(obj)/1000));
+                // }
+                // time = tmptime;
+                // //console.log(tmptime);
+                high = utils.getValueAsArrayFromJson(result, "high", false, true).reverse();
+                low = utils.getValueAsArrayFromJson(result, "low", false, true).reverse();
+                close = utils.getValueAsArrayFromJson(result, "close", false, true).reverse();
+
+
+                volume = utils.getValueAsArrayFromJson(result, "vol", false, false).reverse();
             }
             var status = "ok";
 
@@ -85,14 +168,12 @@ module.exports = {
                 "s": status
             };
 
-            console.log(result);
-            if(result== undefined || result.length<=0)
-            {
-                status="no_data";
+            //console.log(result);
+            if (result == undefined || result.length <= 0) {
+                status = "no_data";
                 res.json({"s": status});
             }
-            else
-            {
+            else {
                 res.json(tmp);
             }
         });

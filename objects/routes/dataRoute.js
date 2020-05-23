@@ -24,5 +24,8 @@ router.get('/symbols', function (req, res, next) {
 router.get('/history', function (req, res, next) {
     item.getHistory(req,res,next);
 });
+router.get('/search', function (req, res, next) {
+    item.getSearch(req,res,next);
+});
 
 module.exports = router;

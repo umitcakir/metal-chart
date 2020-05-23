@@ -127,14 +127,16 @@ module.exports = {
             }
             else if(converttonumber)
             {
+                // console.log('before:',obj[key] );
                 tmp.push(parseFloat(obj[key]));
+                // console.log('after:',parseFloat(obj[key]));
             }
             else
             {
                 tmp.push(obj[key]);
             }
         }
-        console.log(tmp);
+        // console.log(tmp);
         return tmp;
     }
 };
