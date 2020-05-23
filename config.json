@@ -1,0 +1,32 @@
+{
+  "applicationName": "Chart",
+  "applicationDomain": "http://localhost:8080",
+  "applicationServerPort": 8080,
+
+  "database":
+  {
+    "host": "192.168.2.226",
+    "database": "metal",
+    "user": "root",
+    "password": "1885"
+  },
+  "marketConfig":{
+    "supports_search": true,
+    "supports_group_request": false,
+    "supports_marks": true,
+    "supports_timescale_marks": true,
+    "supports_time": true,
+    "exchanges": [
+      {"value": "", "name": "All Exchanges", "desc": ""}, {
+        "value": "LME",
+        "name": "LME",
+        "desc": "LME"
+      }],
+    "symbols_types": [{"name": "All types", "value": ""}, {"name": "Commodity", "value": "Commodity"},
+      {
+        "name": "Index",
+        "value": "index"
+      }],
+    "supported_resolutions": ["D", "W", "M", "1M", "5M", "15M", "30M", "60M"]
+  }
+}
