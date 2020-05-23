@@ -1,7 +1,7 @@
 {
   "applicationName": "Chart",
-  "applicationDomain": "http://localhost:8080",
-  "applicationServerPort": 8080,
+  "applicationDomain": "http://localhost",
+  "applicationServerPort": 80,
 
   "database":
   {

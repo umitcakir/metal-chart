@@ -1,0 +1,126 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+
+    <title>TradingView Charting Library demo</title>
+
+    <!-- Fix for iOS Safari zooming bug -->
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+
+    <script type="text/javascript" src="charting_library/charting_library.min.js"></script>
+    <script type="text/javascript" src="datafeeds/udf/dist/polyfills.js"></script>
+    <script type="text/javascript" src="datafeeds/udf/dist/bundle.js"></script>
+
+    <script type="text/javascript">
+
+        function getParameterByName(name) {
+            name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+            var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+                results = regex.exec(location.search);
+            return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+        }
+
+
+        function initOnReady() {
+            // Make the DIV element draggable:
+            dragElement(document.getElementById("mydiv"));
+
+            var widget = window.tvWidget = new TradingView.widget({
+                // debug: true, // uncomment this line to see Library errors and warnings in the console
+                fullscreen: true,
+                symbol: 'AAPL',
+                interval: 'D',
+                container_id: "tv_chart_container",
+
+                //	BEWARE: no trailing slash is expected in feed URL
+//                datafeed: new Datafeeds.UDFCompatibleDatafeed("https://demo_feed.tradingview.com"),
+                datafeed: new Datafeeds.UDFCompatibleDatafeed("http://localhost"),
+                library_path: "charting_library/",
+                locale: getParameterByName('lang') || "en",
+
+                disabled_features: ["use_localstorage_for_settings"],
+                enabled_features: ["study_templates"],
+                charts_storage_url: 'http://saveload.tradingview.com',
+                charts_storage_api_version: "1.1",
+                client_id: 'tradingview.com',
+                user_id: 'public_user_id',
+                theme: getParameterByName('theme')
+            });
+        };
+
+        function dragElement(elmnt) {
+            var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            if (document.getElementById(elmnt.id + "header")) {
+                // if present, the header is where you move the DIV from:
+                document.getElementById(elmnt.id + "header").onmousedown = dragMouseDown;
+            } else {
+                // otherwise, move the DIV from anywhere inside the DIV:
+                elmnt.onmousedown = dragMouseDown;
+            }
+
+            function dragMouseDown(e) {
+                e = e || window.event;
+                e.preventDefault();
+                // get the mouse cursor position at startup:
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+                // call a function whenever the cursor moves:
+                document.onmousemove = elementDrag;
+            }
+
+            function elementDrag(e) {
+                e = e || window.event;
+                e.preventDefault();
+                // calculate the new cursor position:
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                // set the element's new position:
+                elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+                elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+            }
+
+            function closeDragElement() {
+                // stop moving when mouse button is released:
+                document.onmouseup = null;
+                document.onmousemove = null;
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', initOnReady, false);
+    </script>
+    <style>
+        #mydiv {
+            position: absolute;
+            z-index: 9;
+            background-color: #f1f1f1;
+            border: 1px solid #d3d3d3;
+            text-align: center;
+            width: 800px;
+            height: 600px;
+        }
+
+        #mydivheader {
+            padding: 10px;
+            cursor: move;
+            z-index: 10;
+            background-color: #2196F3;
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body style="margin:0px;">
+
+<!-- Draggable DIV -->
+<div id="mydiv">
+    <!-- Include a header DIV with the same name as the draggable DIV, followed by "header" -->
+    <div id="mydivheader">Click here to move</div>
+    <div id="tv_chart_container"></div>
+</div>
+
+</body>
+</html>

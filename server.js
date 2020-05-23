@@ -24,7 +24,8 @@ app.use(function (req, res, next) {
 
 app.use(bodyParser.json({limit: '50mb'}));
 app.use(bodyParser.urlencoded({limit: '50mb', extended: false, parameterLimit: 50000}));
-//app.use(express.static(__dirname + '/web'));
+console.log(__dirname + '/web');
+app.use(express.static(__dirname + '/web'));
 app.use(nocache());
 app.use(cookieParser());
 
