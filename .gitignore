@@ -1,0 +1,10 @@
+/target/
+.idea/**/*
+*.iml
+logs/
+/Download/*
+/node_modules/*
+/src__/
+/web/demo/*
+/upload/*
+web/log.txt
